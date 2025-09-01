@@ -1,2 +1,32 @@
 # init_debian
-bash script for start debian server configuration 
+## Description 
+Bash script for base debian server configuration.
+
+## Как использовать:
+
+1. Сохраните как setup.sh
+2. Измените USERNAME="your_username" на ваше имя пользователя
+3. Сделайте исполняемым: chmod +x setup.sh
+4. Запустите от root: sudo ./setup.sh
+
+## Дополнительные рекомендации:
+
+1. Для настройки Vim под ваши предпочтения стоит скопировать вашу конфигурацию .vimrc
+2. Для SSH-доступа добавьте ваши публичные ключи в ~/.ssh/authorized_keys
+3. Для некоторых инструментов может потребоваться дополнительная настройка:
+   · Настройка Docker без sudo: sudo usermod -aG docker $USER
+   · Конфигурация kubectl для доступа к кластеру
+   · Инициализация Terraform/Ansible
+
+## Скрипт устанавливает:
+
+- Базовые системные утилиты
+- Инструменты мониторинга и диагностики
+- Сетевые утилиты
+- Vim с базовой настройкой
+- Docker и сопутствующие инструменты
+- Kubernetes инструменты (kubectl, helm)
+- Terraform и Ansible
+- Python окружение
+
+>Примечание: перед использованием в production-средах проверяйте версии устанавливаемых компонентов и при необходимости фиксируйте их версии.
