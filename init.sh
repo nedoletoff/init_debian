@@ -84,8 +84,8 @@ apt install -y \
     iotop \
     cifs-utils \
     vim \
-    expect \
-    k9s
+    expect
+
 check_error "Установка базовых утилит"
 apt install -y software-properties-common
 
