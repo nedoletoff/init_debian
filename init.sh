@@ -1,4 +1,5 @@
 #!/bin/bash
+export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
 # Проверка аргументов
 if [ $# -eq 0 ]; then
@@ -137,10 +138,6 @@ su - "$USERNAME" -c 'git clone https://github.com/asdf-vm/asdf.git ~/.asdf --bra
 echo '. "$HOME/.asdf/asdf.sh"' >> "/home/$USERNAME/.zshrc"
 echo '. "$HOME/.asdf/completions/asdf.bash"' >> "/home/$USERNAME/.zshrc"
 
-# Смена оболочки по умолчанию на zsh
-chsh -s /bin/zsh "$USERNAME"
-check_error "Смена оболочки на Zsh"
-
 # Установка и настройка NeoVim
 mkdir -p /opt/nvim
 cd /opt/nvim
@@ -157,7 +154,7 @@ echo 'export PATH="/opt/nvim/nvim/bin:$PATH"' >> /etc/environment
 
 # Установка конфигурации NeoVim из вашего репозитория
 su - "$USERNAME" -c "mkdir -p ~/.config"
-su - "$USERNAME" -c "git clone https://github.com/nedoletoff/nvim_config.git ~/.config/nvim"
+su - "$USERNAME" -c "git clone https://github.com/nedoletoff/nvim_config.git ~"
 check_error "Клонирование конфигурации NeoVim"
 
 # Установка зависимостей для NeoVim
@@ -219,3 +216,9 @@ echo "2. Настроить SSH-ключи в ~/.ssh/"
 echo "3. Запустить nvim для установки плагинов: nvim +PackerSync"
 echo "4. Для применения изменений групп выполните: newgrp docker"
 echo "5. Проверить работу NeoVim: nvim --version"
+
+echo "Смена оболочки на zsh"
+# Смена оболочки по умолчанию на zsh
+chsh -s /bin/zsh "$USERNAME"
+check_error "Смена оболочки на Zsh"
+echo "Успешно"
