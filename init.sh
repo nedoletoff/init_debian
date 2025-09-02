@@ -85,7 +85,8 @@ apt install -y \
     cifs-utils \
     vim \
     expect \
-    containerd
+    containerd \
+    docker.io
 
 check_error "Установка базовых утилит"
 apt install -y software-properties-common
