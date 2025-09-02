@@ -126,9 +126,9 @@ EOF
 # Установка Go
 mkdir -p "/home/$USERNAME/downloads"
 cd "/home/$USERNAME/downloads"
-wget https://go.dev/dl/go1.21.0.linux-amd64.tar.gz
+wget https://go.dev/dl/go1.25.0.linux-amd64.tar.gz
 check_error "Загрузка Go"
-tar -C /usr/local -xzf go1.21.0.linux-amd64.tar.gz
+tar -C /usr/local -xzf go1.25.0.linux-amd64.tar.gz
 check_error "Распаковка Go"
 echo 'export PATH=/usr/local/go/bin:$PATH' >> "/home/$USERNAME/.zshrc"
 echo 'export GOPATH=$HOME/go' >> "/home/$USERNAME/.zshrc"
@@ -151,10 +151,10 @@ mv nvim-linux-x86_64 nvim
 # Создаем симлинк для доступа из PATH
 ln -sf /opt/nvim/nvim/bin/nvim /usr/local/bin/nvim
 # Добавляем путь в системный PATH
-echo 'export PATH="/opt/nvim/nvim/bin:$PATH"' >> /etc/environment
+# echo 'export PATH="/opt/nvim/nvim/bin:$PATH"' >> /etc/environment
 
 # Установка конфигурации NeoVim из вашего репозитория
-su - "$USERNAME" -c "mkdir -p ~/.config"
+# su - "$USERNAME" -c "mkdir -p /home/$USERNAME/.config"
 su - "$USERNAME" -c "git clone https://github.com/nedoletoff/nvim_config.git ~"
 check_error "Клонирование конфигурации NeoVim"
 
