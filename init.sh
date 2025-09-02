@@ -163,7 +163,7 @@ apt install -y python3-pip python3-venv nodejs npm
 check_error "Установка зависимостей для NeoVim"
 
 # Установка pip и neovim Python package
-python3 -m pip install --user --upgrade pynvim
+apt install python3-pynvim
 check_error "Установка pynvim"
 
 # Установка Node.js поддержки для NeoVim
