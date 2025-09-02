@@ -86,7 +86,7 @@ apt install -y \
 check_error "Установка базовых утилит"
 
 # Добавление пользователя в sudo
-usermod -aG sudo "$USERNAME"
+sudo usermod -aG sudo "$USERNAME"
 check_error "Добавление пользователя в sudo"
 
 # Установка и настройка Zsh
@@ -136,10 +136,6 @@ echo 'export PATH=$GOPATH/bin:$PATH' >> /home/"$USERNAME"/.zshrc
 su - "$USERNAME" -c 'git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.13.1'
 echo '. "$HOME/.asdf/asdf.sh"' >> /home/"$USERNAME"/.zshrc
 echo '. "$HOME/.asdf/completions/asdf.bash"' >> /home/"$USERNAME"/.zshrc
-
-# Смена оболочки по умолчанию на zsh
-chsh -s /bin/zsh "$USERNAME"
-check_error "Смена оболочки на Zsh"
 
 # Установка и настройка NeoVim
 mkdir -p /opt/nvim
@@ -211,6 +207,10 @@ su - "$USERNAME" -c "mkdir -p ~/.local/share/nvim/swap"
 # Очистка кеша
 apt autoremove -y
 apt clean
+
+# Смена оболочки по умолчанию на zsh
+chsh -s /bin/zsh "$USERNAME"
+check_error "Смена оболочки на Zsh"
 
 echo "Настройка завершена!"
 echo "Не забудьте:"
