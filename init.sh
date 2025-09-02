@@ -84,7 +84,8 @@ apt install -y \
     iotop \
     cifs-utils \
     vim \
-    expect
+    expect \
+    containerd
 
 check_error "Установка базовых утилит"
 apt install -y software-properties-common
