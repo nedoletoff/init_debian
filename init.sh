@@ -21,8 +21,17 @@ if ! id "$USERNAME" &>/dev/null; then
     exit 1
 fi
 
+# Функция для проверки ошибок
+check_error() {
+    if [ $? -ne 0 ]; then
+        echo "Ошибка при выполнении: $1"
+        exit 1
+    fi
+}
+
 # Обновление системы
 apt update && apt upgrade -y
+check_error "Обновление системы"
 
 # Установка базовых утилит
 apt install -y \
@@ -56,15 +65,38 @@ apt install -y \
     postgresql \
     postgresql-contrib \
     tar \
-    dpkg
+    dpkg \
+    build-essential \
+    libssl-dev \
+    zlib1g-dev \
+    libbz2-dev \
+    libreadline-dev \
+    libsqlite3-dev \
+    libncursesw5-dev \
+    xz-utils \
+    tk-dev \
+    libxml2-dev \
+    libxmlsec1-dev \
+    libffi-dev \
+    liblzma-dev \
+    sysstat \
+    iotop \
+    cifs-utils \
+    expect
+check_error "Установка базовых утилит"
 
 # Добавление пользователя в sudo
-sudo usermod -aG sudo "$USERNAME"
+usermod -aG sudo "$USERNAME"
+check_error "Добавление пользователя в sudo"
 
 # Установка и настройка Zsh
 apt install -y zsh
+check_error "Установка Zsh"
+
 # Установка Oh My Zsh
 su - "$USERNAME" -c 'sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended'
+check_error "Установка Oh My Zsh"
+
 # Установка плагинов Zsh
 su - "$USERNAME" -c 'git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions'
 su - "$USERNAME" -c 'git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting'
@@ -81,72 +113,100 @@ zstyle -s ':completion:*:hosts' hosts _ssh_config
 [[ -r ~/.ssh/config ]] && _ssh_config+=($(cat ~/.ssh/config | sed -n 's/Host[=\t ]//p'))
 zstyle ':completion:*:hosts' hosts $_ssh_config
 
+# Добавление путей к бинарникам
+export PATH="$HOME/.local/bin:$PATH"
+export PATH="/opt/nvim/bin:$PATH"
+export PATH="/usr/local/go/bin:$PATH"
+export PATH="$HOME/go/bin:$PATH"
+
 EOF
 
-
 # Установка Go
-mkdir -p downloads
-cd downloads
-wget https://golang.org/d1/go1.25.0.linux-amd64.tar.gz
-sudo tar -C /usr/local -xzf go1.20.2.linux-amd64.tar.gz
-su - $USERNAME -c echo "export PATH=/usr/local/go/bin:${PATH}" | sudo tee -a $HOME/.profile
-su - $USERNAME -c source $HOME/.profile
+mkdir -p /home/"$USERNAME"/downloads
+cd /home/"$USERNAME"/downloads
+wget https://go.dev/dl/go1.21.0.linux-amd64.tar.gz
+check_error "Загрузка Go"
+tar -C /usr/local -xzf go1.21.0.linux-amd64.tar.gz
+check_error "Распаковка Go"
+echo 'export PATH=/usr/local/go/bin:$PATH' >> /home/"$USERNAME"/.zshrc
+echo 'export GOPATH=$HOME/go' >> /home/"$USERNAME"/.zshrc
+echo 'export PATH=$GOPATH/bin:$PATH' >> /home/"$USERNAME"/.zshrc
 
-# Установка asd
-sudo go install github.com/asdf-vm/asdf/cmd/asdf@v0.18.0
-export PATH="${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$PATH"
-
+# Установка asdf (правильным способом)
+su - "$USERNAME" -c 'git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.13.1'
+echo '. "$HOME/.asdf/asdf.sh"' >> /home/"$USERNAME"/.zshrc
+echo '. "$HOME/.asdf/completions/asdf.bash"' >> /home/"$USERNAME"/.zshrc
 
 # Смена оболочки по умолчанию на zsh
 chsh -s /bin/zsh "$USERNAME"
+check_error "Смена оболочки на Zsh"
 
 # Установка и настройка NeoVim
-curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.appimage
-chmod u+x nvim-linux-x86_64.appimage
-./nvim-linux-x86_64.appimage
 mkdir -p /opt/nvim
-mv nvim-linux-x86_64.appimage /opt/nvim/nvim
-export PATH="$PATH:/opt/nvim/"
+cd /opt/nvim
+curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz
+check_error "Загрузка NeoVim"
+tar xzf nvim-linux-x86_64.tar.gz
+check_error "Распаковка NeoVim"
+# Переименование директории для удобства
+mv nvim-linux-x86_64 nvim
+# Создаем симлинк для доступа из PATH
+ln -sf /opt/nvim/nvim/bin/nvim /usr/local/bin/nvim
+# Добавляем путь в системный PATH
+echo 'export PATH="/opt/nvim/nvim/bin:$PATH"' >> /etc/environment
 
-# Создание базовой конфигурации, если её нет
-if [ ! -d "/home/$USERNAME/.config/nvim" ]; then
-    su - "$USERNAME" -c "mkdir -p ~/.config/nvim"
-    su - "$USERNAME" -c "git clone https://github.com/nedoletoff/nvim_config.git ~/.config/nvim"  # ЗАМЕНИТЕ НА ВАШ РЕПОЗИТОРИЙ
-fi
+# Установка конфигурации NeoVim из вашего репозитория
+su - "$USERNAME" -c "mkdir -p ~/.config"
+su - "$USERNAME" -c "git clone https://github.com/nedoletoff/nvim_config.git ~
+check_error "Клонирование конфигурации NeoVim"
+
+# Установка зависимостей для NeoVim
+apt install -y python3-pip python3-venv nodejs npm
+check_error "Установка зависимостей для NeoVim"
+
+# Установка pip и neovim Python package
+python3 -m pip install --user --upgrade pynvim
+check_error "Установка pynvim"
+
+# Установка Node.js поддержки для NeoVim
+su - "$USERNAME" -c "npm install -g neovim"
+check_error "Установка neovim npm package"
 
 # Установка Docker
-curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
-echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/debian $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+# Определяем дистрибутив
+DISTRO=$(lsb_release -is | tr '[:upper:]' '[:lower:]')
+curl -fsSL https://download.docker.com/linux/$DISTRO/gpg | gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/docker-archive-keyring.gpg] https://download.docker.com/linux/$DISTRO $(lsb_release -cs) stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 apt update
 apt install -y docker-ce docker-ce-cli containerd.io
+check_error "Установка Docker"
 usermod -aG docker "$USERNAME"
+check_error "Добавление пользователя в группу docker"
+
+# Установка Kubernetes tools
+# Добавление репозитория Kubernetes
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /" | tee /etc/apt/sources.list.d/kubernetes.list
+apt update
+apt install -y kubelet kubeadm kubectl
+check_error "Установка Kubernetes tools"
+apt-mark hold kubelet kubeadm kubectl
+
+# Установка Helm
+curl https://raw.githubusercontent.com/helm/helm/main/scripts/get-helm-3 | bash
+check_error "Установка Helm"
 
 # Установка дополнительных инструментов DevOps
 # Docker-compose
 curl -SL https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
 chmod +x /usr/local/bin/docker-compose
+check_error "Установка Docker Compose"
 
-# Kubernetes tools
-curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
-chmod +x kubectl
-mv kubectl /usr/local/bin/
+# Настройка прав доступа
+chown -R "$USERNAME":"$USERNAME" /home/"$USERNAME"
 
-# Terraform
-curl -fsSL https://apt.releases.hashicorp.com/gpg | gpg --dearmor -o /usr/share/keyrings/hashicorp-archive-keyring.gpg
-echo "deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/hashicorp.list
-apt update
-apt install -y terraform
-
-# Ansible
-apt install -y ansible
-
-# Python и основные инструменты
-apt install -y python3 python3-pip python3-venv
-
-# Отключение swap
-swapoff -a
-sed -i '/swap/s/^\(.*\)$/#\1/g' /etc/fstab
-systemctl disable --now swap.target
+# Создание директории для swap файлов NeoVim
+su - "$USERNAME" -c "mkdir -p ~/.local/share/nvim/swap"
 
 # Очистка кеша
 apt autoremove -y
@@ -156,5 +216,6 @@ echo "Настройка завершена!"
 echo "Не забудьте:"
 echo "1. Перезайти в систему для применения изменений"
 echo "2. Настроить SSH-ключи в ~/.ssh/"
-echo "3. Проверить настройки NeoVim"
+echo "3. Запустить nvim для установки плагинов: nvim +PackerSync"
 echo "4. Для применения изменений групп выполните: newgrp docker"
+echo "5. Проверить работу NeoVim: nvim --version"
