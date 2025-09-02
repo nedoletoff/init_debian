@@ -154,8 +154,8 @@ ln -sf /opt/nvim/nvim/bin/nvim /usr/local/bin/nvim
 # echo 'export PATH="/opt/nvim/nvim/bin:$PATH"' >> /etc/environment
 
 # Установка конфигурации NeoVim из вашего репозитория
-# su - "$USERNAME" -c "mkdir -p /home/$USERNAME/.config"
-su - "$USERNAME" -c "git clone https://github.com/nedoletoff/nvim_config.git ~"
+su - "$USERNAME" -c "mkdir -p /home/$USERNAME/.config"
+su - "$USERNAME" -c "git clone https://github.com/nedoletoff/nvim_config.git ~/.config"
 check_error "Клонирование конфигурации NeoVim"
 
 # Установка зависимостей для NeoVim
