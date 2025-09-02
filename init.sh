@@ -83,7 +83,6 @@ zstyle ':completion:*:hosts' hosts $_ssh_config
 
 EOF
 
-su $USERNAME
 
 # Установка Go
 mkdir -p downloads
@@ -93,11 +92,10 @@ sudo tar -C /usr/local -xzf go1.20.2.linux-amd64.tar.gz
 echo "export PATH=/usr/local/go/bin:${PATH}" | sudo tee -a $HOME/.profile
 source $HOME/.profile
 
-# Установка asdf
+# Установка asd
 sudo go install github.com/asdf-vm/asdf/cmd/asdf@v0.18.0
 export PATH="${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$PATH"
 
-exit
 
 # Смена оболочки по умолчанию на zsh
 chsh -s /bin/zsh "$USERNAME"
