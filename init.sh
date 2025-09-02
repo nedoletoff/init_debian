@@ -83,6 +83,7 @@ apt install -y \
     sysstat \
     iotop \
     cifs-utils \
+    vim \
     expect
 check_error "Установка базовых утилит"
 
