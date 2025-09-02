@@ -53,12 +53,13 @@ apt install -y \
     gnupg \
     lsb-release \
     zsh \
-    neovim \
     postgresql \
-    postgressql-contrib
+    postgressql-contrib \
+    tar \
+    dpkg
 
 # Добавление пользователя в sudo
-usermod -aG sudo "$USERNAME"
+sudo usermod -aG sudo "$USERNAME"
 
 # Установка и настройка Zsh
 apt install -y zsh
@@ -80,20 +81,37 @@ zstyle -s ':completion:*:hosts' hosts _ssh_config
 [[ -r ~/.ssh/config ]] && _ssh_config+=($(cat ~/.ssh/config | sed -n 's/Host[=\t ]//p'))
 zstyle ':completion:*:hosts' hosts $_ssh_config
 
-# Дополнительные алиасы
-alias vim="nvim"
-alias vi="nvim"
 EOF
+
+su $USERNAME
+
+# Установка Go
+mkdir -p downloads
+cd downloads
+wget https://golang.org/d1/go1.25.0.linux-amd64.tar.gz
+sudo tar -C /usr/local -xzf go1.20.2.linux-amd64.tar.gz
+echo "export PATH=/usr/local/go/bin:${PATH}" | sudo tee -a $HOME/.profile
+source $HOME/.profile
+
+# Установка asdf
+sudo go install github.com/asdf-vm/asdf/cmd/asdf@v0.18.0
+export PATH="${ASDF_DATA_DIR:-$HOME/.asdf}/shims:$PATH"
+
+exit
 
 # Смена оболочки по умолчанию на zsh
 chsh -s /bin/zsh "$USERNAME"
 
 # Установка и настройка NeoVim
-apt install -y neovim
+curl -L -O "https://github.com/neovim/neovim/releases/download/stable/nvim-linux64.deb"
+apt install -y ./nvim-linux64.deb
+sudo dpkg -i --force-overwrite ./nvim-linux64.deb
+sudo apt -f install
+
 # Создание базовой конфигурации, если её нет
 if [ ! -d "/home/$USERNAME/.config/nvim" ]; then
     su - "$USERNAME" -c "mkdir -p ~/.config/nvim"
-    su - "$USERNAME" -c "git clone https://github.com/your_username/your_nvim_config.git ~/.config/nvim"  # ЗАМЕНИТЕ НА ВАШ РЕПОЗИТОРИЙ
+    su - "$USERNAME" -c "git clone https://github.com/nedoletoff/nvim_config.git ~/.config/nvim"  # ЗАМЕНИТЕ НА ВАШ РЕПОЗИТОРИЙ
 fi
 
 # Установка Docker
