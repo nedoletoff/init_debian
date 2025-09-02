@@ -54,7 +54,7 @@ apt install -y \
     lsb-release \
     zsh \
     postgresql \
-    postgressql-contrib \
+    postgresql-contrib \
     tar \
     dpkg
 
