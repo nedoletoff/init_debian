@@ -84,8 +84,11 @@ apt install -y \
     iotop \
     cifs-utils \
     vim \
-    expect
+    expect \
+    k9s
 check_error "Установка базовых утилит"
+apt install -y software-properties-common
+
 
 # Добавление пользователя в sudo
 sudo usermod -aG sudo "$USERNAME"
@@ -133,6 +136,7 @@ check_error "Распаковка Go"
 echo 'export PATH=/usr/local/go/bin:$PATH' >> "/home/$USERNAME/.zshrc"
 echo 'export GOPATH=$HOME/go' >> "/home/$USERNAME/.zshrc"
 echo 'export PATH=$GOPATH/bin:$PATH' >> "/home/$USERNAME/.zshrc"
+su - "$USERNAME" -c "mkdir -p ~/go/bin"
 
 # Установка asdf (правильным способом)
 su - "$USERNAME" -c 'git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.13.1'
@@ -167,6 +171,16 @@ apt install python3-pynvim
 check_error "Установка pynvim"
 
 # Установка Node.js поддержки для NeoVim
+# Создаем директорию для глобальных npm-пакетов пользователя
+su - "$USERNAME" -c "mkdir -p ~/.npm-global"
+# Настраиваем npm для использования пользовательской директории
+su - "$USERNAME" -c "npm config set prefix '~/.npm-global'"
+# Добавляем путь в .zshrc
+echo 'export PATH=~/.npm-global/bin:$PATH' >> "/home/$USERNAME/.zshrc"
+# Обновляем PATH для текущей сессии
+export PATH="/home/$USERNAME/.npm-global/bin:$PATH"
+
+# Теперь устанавливаем neovim
 su - "$USERNAME" -c "npm install -g neovim"
 check_error "Установка neovim npm package"
 
@@ -183,7 +197,7 @@ check_error "Добавление пользователя в группу docke
 
 # Установка Kubernetes tools
 # Добавление репозитория Kubernetes
-curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
+curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.33/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
 echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /" | tee /etc/apt/sources.list.d/kubernetes.list > /dev/null
 apt update
 apt install -y kubelet kubeadm kubectl
