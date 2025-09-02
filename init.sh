@@ -89,8 +89,8 @@ mkdir -p downloads
 cd downloads
 wget https://golang.org/d1/go1.25.0.linux-amd64.tar.gz
 sudo tar -C /usr/local -xzf go1.20.2.linux-amd64.tar.gz
-echo "export PATH=/usr/local/go/bin:${PATH}" | sudo tee -a $HOME/.profile
-source $HOME/.profile
+su - $USERNAME -c echo "export PATH=/usr/local/go/bin:${PATH}" | sudo tee -a $HOME/.profile
+su - $USERNAME -c source $HOME/.profile
 
 # Установка asd
 sudo go install github.com/asdf-vm/asdf/cmd/asdf@v0.18.0
