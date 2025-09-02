@@ -102,7 +102,7 @@ su - "$USERNAME" -c 'git clone https://github.com/zsh-users/zsh-autosuggestions 
 su - "$USERNAME" -c 'git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting'
 
 # Настройка Zsh для пользователя
-cat > /home/"$USERNAME"/.zshrc << 'EOF'
+cat > "/home/$USERNAME/.zshrc" << 'EOF'
 export ZSH="$HOME/.oh-my-zsh"
 ZSH_THEME="robbyrussell"
 plugins=(git zsh-autosuggestions zsh-syntax-highlighting ssh-agent)
@@ -122,20 +122,24 @@ export PATH="$HOME/go/bin:$PATH"
 EOF
 
 # Установка Go
-mkdir -p /home/"$USERNAME"/downloads
-cd /home/"$USERNAME"/downloads
+mkdir -p "/home/$USERNAME/downloads"
+cd "/home/$USERNAME/downloads"
 wget https://go.dev/dl/go1.21.0.linux-amd64.tar.gz
 check_error "Загрузка Go"
 tar -C /usr/local -xzf go1.21.0.linux-amd64.tar.gz
 check_error "Распаковка Go"
-echo 'export PATH=/usr/local/go/bin:$PATH' >> /home/"$USERNAME"/.zshrc
-echo 'export GOPATH=$HOME/go' >> /home/"$USERNAME"/.zshrc
-echo 'export PATH=$GOPATH/bin:$PATH' >> /home/"$USERNAME"/.zshrc
+echo 'export PATH=/usr/local/go/bin:$PATH' >> "/home/$USERNAME/.zshrc"
+echo 'export GOPATH=$HOME/go' >> "/home/$USERNAME/.zshrc"
+echo 'export PATH=$GOPATH/bin:$PATH' >> "/home/$USERNAME/.zshrc"
 
 # Установка asdf (правильным способом)
 su - "$USERNAME" -c 'git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.13.1'
-echo '. "$HOME/.asdf/asdf.sh"' >> /home/"$USERNAME"/.zshrc
-echo '. "$HOME/.asdf/completions/asdf.bash"' >> /home/"$USERNAME"/.zshrc
+echo '. "$HOME/.asdf/asdf.sh"' >> "/home/$USERNAME/.zshrc"
+echo '. "$HOME/.asdf/completions/asdf.bash"' >> "/home/$USERNAME/.zshrc"
+
+# Смена оболочки по умолчанию на zsh
+chsh -s /bin/zsh "$USERNAME"
+check_error "Смена оболочки на Zsh"
 
 # Установка и настройка NeoVim
 mkdir -p /opt/nvim
@@ -153,7 +157,7 @@ echo 'export PATH="/opt/nvim/nvim/bin:$PATH"' >> /etc/environment
 
 # Установка конфигурации NeoVim из вашего репозитория
 su - "$USERNAME" -c "mkdir -p ~/.config"
-su - "$USERNAME" -c "git clone https://github.com/nedoletoff/nvim_config.git ~
+su - "$USERNAME" -c "git clone https://github.com/nedoletoff/nvim_config.git ~/.config/nvim"
 check_error "Клонирование конфигурации NeoVim"
 
 # Установка зависимостей для NeoVim
@@ -182,7 +186,7 @@ check_error "Добавление пользователя в группу docke
 # Установка Kubernetes tools
 # Добавление репозитория Kubernetes
 curl -fsSL https://pkgs.k8s.io/core:/stable:/v1.28/deb/Release.key | gpg --dearmor -o /etc/apt/keyrings/kubernetes-apt-keyring.gpg
-echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /" | tee /etc/apt/sources.list.d/kubernetes.list
+echo "deb [signed-by=/etc/apt/keyrings/kubernetes-apt-keyring.gpg] https://pkgs.k8s.io/core:/stable:/v1.28/deb/ /" | tee /etc/apt/sources.list.d/kubernetes.list > /dev/null
 apt update
 apt install -y kubelet kubeadm kubectl
 check_error "Установка Kubernetes tools"
@@ -199,7 +203,7 @@ chmod +x /usr/local/bin/docker-compose
 check_error "Установка Docker Compose"
 
 # Настройка прав доступа
-chown -R "$USERNAME":"$USERNAME" /home/"$USERNAME"
+chown -R "$USERNAME:$USERNAME" "/home/$USERNAME"
 
 # Создание директории для swap файлов NeoVim
 su - "$USERNAME" -c "mkdir -p ~/.local/share/nvim/swap"
@@ -207,10 +211,6 @@ su - "$USERNAME" -c "mkdir -p ~/.local/share/nvim/swap"
 # Очистка кеша
 apt autoremove -y
 apt clean
-
-# Смена оболочки по умолчанию на zsh
-chsh -s /bin/zsh "$USERNAME"
-check_error "Смена оболочки на Zsh"
 
 echo "Настройка завершена!"
 echo "Не забудьте:"
