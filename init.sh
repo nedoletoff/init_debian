@@ -103,10 +103,12 @@ exit
 chsh -s /bin/zsh "$USERNAME"
 
 # Установка и настройка NeoVim
-curl -L -O "https://github.com/neovim/neovim/releases/download/stable/nvim-linux64.deb"
-apt install -y ./nvim-linux64.deb
-sudo dpkg -i --force-overwrite ./nvim-linux64.deb
-sudo apt -f install
+curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.appimage
+chmod u+x nvim-linux-x86_64.appimage
+./nvim-linux-x86_64.appimage
+mkdir -p /opt/nvim
+mv nvim-linux-x86_64.appimage /opt/nvim/nvim
+export PATH="$PATH:/opt/nvim/"
 
 # Создание базовой конфигурации, если её нет
 if [ ! -d "/home/$USERNAME/.config/nvim" ]; then
