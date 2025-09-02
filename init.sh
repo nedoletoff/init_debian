@@ -86,7 +86,9 @@ apt install -y \
     vim \
     expect \
     containerd \
-    docker.io
+    docker.io \
+    ipvsadm \
+    nfs-common 
 
 check_error "Установка базовых утилит"
 apt install -y software-properties-common
