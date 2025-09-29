@@ -152,7 +152,7 @@ curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | tee /usr/s
 echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/" | tee /etc/apt/sources.list.d/jenkins.list > /dev/null
 
 apt update
-apt install -y openjdk-17-jdk
+apt install -y openjdk-17-jdk openjdk-21-jdk
 apt install -y jenkins
 check_error "Установка Jenkins"
 
@@ -167,6 +167,23 @@ if command -v ufw &> /dev/null; then
 fi
 
 JENKINS_PASSWORD=$(cat /var/lib/jenkins/secrets/initialAdminPassword 2>/dev/null || echo "не удалось получить пароль")
+
+# ==================================================
+# Установка Apache2
+# ==================================================
+
+echo "Установка Apache2..."
+
+apt install -y apache2
+
+# Включение необходимых модулей
+sudo a2enmod rewrite
+sudo a2enmod proxy
+sudo a2enmod proxy_http
+
+# Запуск Apache
+sudo systemctl start apache2
+sudo systemctl enable apache2
 
 # ==================================================
 # Финальная настройка
