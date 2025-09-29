@@ -1,7 +1,10 @@
 #!/bin/bash
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
-# Проверка аргументов
+# ==================================================
+# Параметры и проверки
+# ==================================================
+
 if [ $# -eq 0 ]; then
     echo "Использование: $0 username [domain]"
     echo "Укажите имя пользователя в качестве аргумента"
@@ -12,19 +15,20 @@ fi
 USERNAME="$1"
 DOMAIN="${2:-example.com}"
 
-# Проверка прав root
 if [ "$EUID" -ne 0 ]; then
     echo "Запустите скрипт с правами root (sudo)"
     exit 1
 fi
 
-# Проверка существования пользователя
 if ! id "$USERNAME" &>/dev/null; then
     echo "Пользователь $USERNAME не существует!"
     exit 1
 fi
 
-# Функция для проверки ошибок
+# ==================================================
+# Функции
+# ==================================================
+
 check_error() {
     if [ $? -ne 0 ]; then
         echo "Ошибка при выполнении: $1"
@@ -32,109 +36,64 @@ check_error() {
     fi
 }
 
-# Обновление системы
+# ==================================================
+# Основная установка
+# ==================================================
+
+echo "Обновление системы..."
 apt update && apt upgrade -y
 check_error "Обновление системы"
 
-# Установка базовых утилит
+echo "Установка базовых утилит..."
 apt install -y \
-    sudo \
-    curl \
-    wget \
-    git \
-    htop \
-    tree \
-    tmux \
-    mc \
-    ncdu \
-    jq \
-    ripgrep \
-    fzf \
-    dnsutils \
-    net-tools \
-    iputils-ping \
-    traceroute \
-    mtr-tiny \
-    tcpdump \
-    nmap \
-    sshfs \
-    rsync \
-    unzip \
-    p7zip-full \
-    ca-certificates \
-    gnupg \
-    lsb-release \
-    zsh \
-    tar \
-    build-essential \
-    libssl-dev \
-    zlib1g-dev \
-    libbz2-dev \
-    libreadline-dev \
-    libsqlite3-dev \
-    libncursesw5-dev \
-    xz-utils \
-    tk-dev \
-    libxml2-dev \
-    libxmlsec1-dev \
-    libffi-dev \
-    liblzma-dev \
-    sysstat \
-    iotop \
-    cifs-utils \
-    vim \
-    expect
-
+    sudo curl wget git htop tree tmux mc ncdu jq \
+    ripgrep fzf dnsutils net-tools iputils-ping \
+    traceroute mtr-tiny tcpdump nmap sshfs rsync \
+    unzip p7zip-full ca-certificates gnupg lsb-release \
+    zsh tar build-essential libssl-dev zlib1g-dev \
+    libbz2-dev libreadline-dev libsqlite3-dev \
+    libncursesw5-dev xz-utils tk-dev libxml2-dev \
+    libxmlsec1-dev libffi-dev liblzma-dev sysstat \
+    iotop cifs-utils vim expect
 check_error "Установка базовых утилит"
 
-# Установка Apache и сопутствующих пакетов
+echo "Установка Apache и сопутствующих пакетов..."
 apt install -y \
-    apache2 \
-    apache2-utils \
-    apache2-doc \
-    libapache2-mod-ssl \
-    libapache2-mod-security2 \
-    openssl \
-    certbot \
-    python3-certbot-apache \
-    php \
-    php-cli \
-    php-fpm \
-    php-curl \
-    php-gd \
-    php-mysql \
-    php-mbstring \
-    php-xml \
-    php-zip \
-    php-json \
-    php-bcmath \
-    php-intl \
-    php-soap \
-    php-xmlrpc \
-    mariadb-server \
-    mariadb-client \
-    postfix \
-    mailutils
-
+    apache2 apache2-utils apache2-doc \
+    libapache2-mod-ssl libapache2-mod-security2 \
+    openssl certbot python3-certbot-apache \
+    php php-cli php-fpm php-curl php-gd \
+    php-mysql php-mbstring php-xml php-zip \
+    php-json php-bcmath php-intl php-soap \
+    php-xmlrpc mariadb-server mariadb-client \
+    postfix mailutils
 check_error "Установка Apache и сопутствующих пакетов"
 
-# Добавление пользователя в sudo и www-data
-sudo usermod -aG sudo "$USERNAME"
-sudo usermod -aG www-data "$USERNAME"
+# ==================================================
+# Настройка пользователя
+# ==================================================
+
+echo "Добавление пользователя в группы..."
+usermod -aG sudo "$USERNAME"
+usermod -aG www-data "$USERNAME"
 check_error "Добавление пользователя в группы"
 
+# ==================================================
 # Настройка Apache
+# ==================================================
+
+echo "Настройка Apache..."
 a2enmod rewrite
 a2enmod ssl
 a2enmod headers
 a2enmod security2
 
-# Создание директорий для сайтов
+echo "Создание директорий для сайтов..."
 mkdir -p /var/www/$DOMAIN/{public_html,logs,backups}
 chown -R $USERNAME:www-data /var/www/$DOMAIN
 chmod -R 755 /var/www/$DOMAIN
 
-# Создание виртуального хоста
+echo "Создание виртуального хоста..."
 cat > /etc/apache2/sites-available/$DOMAIN.conf << EOF
 <VirtualHost *:80>
     ServerName $DOMAIN
@@ -194,12 +153,11 @@ cat > /etc/apache2/sites-available/$DOMAIN.conf << EOF
 </VirtualHost>
 EOF
 
-# Активация виртуального хоста
 a2dissite 000-default.conf
 a2ensite $DOMAIN.conf
 check_error "Настройка виртуального хоста"
 
-# Настройка безопасности Apache
+echo "Настройка безопасности Apache..."
 cat > /etc/apache2/conf-available/security.conf << EOF
 ServerTokens Prod
 ServerSignature Off
@@ -219,7 +177,7 @@ FileETag None
 </Directory>
 EOF
 
-# Настройка ModSecurity
+echo "Настройка ModSecurity..."
 cat > /etc/modsecurity/modsecurity.conf << 'EOF'
 SecRuleEngine On
 SecRequestBodyAccess On
@@ -240,32 +198,19 @@ SecUploadDir /tmp/
 SecUploadKeepFiles Off
 EOF
 
+# ==================================================
 # Настройка PHP
-cat > /etc/php/8.?/fpm/php.ini << 'EOF'
-[PHP]
-engine = On
-expose_php = Off
-max_execution_time = 30
-memory_limit = 256M
-error_reporting = E_ALL & ~E_DEPRECATED & ~E_STRICT
-display_errors = Off
-log_errors = On
-error_log = /var/log/php/error.log
-post_max_size = 64M
-upload_max_filesize = 64M
-max_file_uploads = 20
-date.timezone = Europe/Moscow
-opcache.enable = 1
-opcache.memory_consumption = 128
-opcache.max_accelerated_files = 10000
-opcache.revalidate_freq = 2
-EOF
+# ==================================================
 
-# Создание директории для логов PHP
+echo "Настройка PHP..."
 mkdir -p /var/log/php
 chown www-data:www-data /var/log/php
 
+# ==================================================
 # Настройка MariaDB
+# ==================================================
+
+echo "Настройка MariaDB..."
 mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'root_password';"
 mysql -e "DELETE FROM mysql.user WHERE User='';"
 mysql -e "DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');"
@@ -273,32 +218,40 @@ mysql -e "DROP DATABASE IF EXISTS test;"
 mysql -e "DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';"
 mysql -e "FLUSH PRIVILEGES;"
 
-# Создание базы данных и пользователя для сайта
+echo "Создание базы данных и пользователя для сайта..."
 mysql -e "CREATE DATABASE IF NOT EXISTS ${DOMAIN//./_}_db;"
 mysql -e "CREATE USER IF NOT EXISTS '${DOMAIN//./_}_user'@'localhost' IDENTIFIED BY 'secure_password';"
 mysql -e "GRANT ALL PRIVILEGES ON ${DOMAIN//./_}_db.* TO '${DOMAIN//./_}_user'@'localhost';"
 mysql -e "FLUSH PRIVILEGES;"
 
+# ==================================================
 # Настройка firewall
+# ==================================================
+
+echo "Настройка firewall..."
 apt install -y ufw
 ufw allow ssh
 ufw allow 'Apache Full'
 ufw --force enable
 check_error "Настройка firewall"
 
-# Установка и настройка Zsh
+# ==================================================
+# Установка Zsh и плагинов
+# ==================================================
+
+echo "Установка и настройка Zsh..."
 apt install -y zsh
 check_error "Установка Zsh"
 
-# Установка Oh My Zsh
+echo "Установка Oh My Zsh..."
 su - "$USERNAME" -c 'sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended'
 check_error "Установка Oh My Zsh"
 
-# Установка плагинов Zsh
+echo "Установка плагинов Zsh..."
 su - "$USERNAME" -c 'git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions'
 su - "$USERNAME" -c 'git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting'
 
-# Настройка Zsh для пользователя
+echo "Настройка Zsh..."
 cat > "/home/$USERNAME/.zshrc" << 'EOF'
 export ZSH="$HOME/.oh-my-zsh"
 ZSH_THEME="robbyrussell"
@@ -331,51 +284,13 @@ alias www-edit='sudo vim /etc/apache2/sites-available/'
 # Добавление путей к бинарникам
 export PATH="$HOME/.local/bin:$PATH"
 export PATH="/opt/nvim/bin:$PATH"
-
 EOF
 
-# Установка и настройка NeoVim
-mkdir -p /opt/nvim
-cd /opt/nvim
-curl -LO https://github.com/neovim/neovim/releases/latest/download/nvim-linux-x86_64.tar.gz
-check_error "Загрузка NeoVim"
-tar xzf nvim-linux-x86_64.tar.gz
-check_error "Распаковка NeoVim"
-# Переименование директории для удобства
-mv nvim-linux-x86_64 nvim
-# Создаем симлинк для доступа из PATH
-ln -sf /opt/nvim/nvim/bin/nvim /usr/local/bin/nvim
-# Добавляем путь в системный PATH
-# echo 'export PATH="/opt/nvim/nvim/bin:$PATH"' >> /etc/environment
+# ==================================================
+# Создание тестовых страниц
+# ==================================================
 
-# Установка конфигурации NeoVim из вашего репозитория
-su - "$USERNAME" -c "mkdir -p /home/$USERNAME/.config"
-su - "$USERNAME" -c "git clone https://github.com/nedoletoff/nvim_config.git ~/.config"
-check_error "Клонирование конфигурации NeoVim"
-
-# Установка зависимостей для NeoVim
-apt install -y python3-pip python3-venv nodejs npm
-check_error "Установка зависимостей для NeoVim"
-
-# Установка pip и neovim Python package
-apt install -y python3-pynvim
-check_error "Установка pynvim"
-
-# Установка Node.js поддержки для NeoVim
-# Создаем директорию для глобальных npm-пакетов пользователя
-su - "$USERNAME" -c "mkdir -p ~/.npm-global"
-# Настраиваем npm для использования пользовательской директории
-su - "$USERNAME" -c "npm config set prefix '~/.npm-global'"
-# Добавляем путь в .zshrc
-echo 'export PATH=~/.npm-global/bin:$PATH' >> "/home/$USERNAME/.zshrc"
-# Обновляем PATH для текущей сессии
-export PATH="/home/$USERNAME/.npm-global/bin:$PATH"
-
-# Теперь устанавливаем neovim
-su - "$USERNAME" -c "npm install -g neovim"
-check_error "Установка neovim npm package"
-
-# Создание тестовой страницы
+echo "Создание тестовой страницы..."
 cat > /var/www/$DOMAIN/public_html/index.html << EOF
 <!DOCTYPE html>
 <html lang="ru">
@@ -447,7 +362,7 @@ cat > /var/www/$DOMAIN/public_html/index.html << EOF
 </html>
 EOF
 
-# Создание PHP info страницы
+echo "Создание PHP info страницы..."
 cat > /var/www/$DOMAIN/public_html/phpinfo.php << 'EOF'
 <?php
 // Ограничиваем доступ только с локального хоста
@@ -461,22 +376,25 @@ phpinfo();
 ?>
 EOF
 
-# Настройка прав доступа
+# ==================================================
+# Финальная настройка
+# ==================================================
+
+echo "Настройка прав доступа..."
 chown -R "$USERNAME:www-data" "/var/www/$DOMAIN"
 chmod -R 755 "/var/www/$DOMAIN"
 chmod 600 "/var/www/$DOMAIN/public_html/phpinfo.php"
 
-# Перезагрузка служб
+echo "Перезагрузка служб..."
 systemctl restart apache2
 systemctl restart mariadb
 systemctl restart php8.2-fpm
 systemctl enable apache2
 systemctl enable mariadb
 systemctl enable php8.2-fpm
-
 check_error "Перезагрузка служб"
 
-# Настройка автоматических бэкапов
+echo "Настройка автоматических бэкапов..."
 cat > /etc/cron.daily/apache-backup << EOF
 #!/bin/bash
 BACKUP_DIR="/var/www/$DOMAIN/backups"
@@ -497,13 +415,17 @@ EOF
 
 chmod +x /etc/cron.daily/apache-backup
 
-# Смена оболочки на zsh
+echo "Смена оболочки на zsh..."
 chsh -s /bin/zsh "$USERNAME"
 check_error "Смена оболочки на Zsh"
 
-# Очистка кеша
+echo "Очистка кеша..."
 apt autoremove -y
 apt clean
+
+# ==================================================
+# Вывод информации
+# ==================================================
 
 echo " "
 echo "=================================================="

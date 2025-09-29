@@ -1,7 +1,10 @@
 #!/bin/bash
 export PATH="/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin"
 
-# Проверка аргументов
+# ==================================================
+# Параметры и проверки
+# ==================================================
+
 if [ $# -eq 0 ]; then
     echo "Использование: $0 username"
     echo "Укажите имя пользователя в качестве аргумента"
@@ -10,19 +13,20 @@ fi
 
 USERNAME="$1"
 
-# Проверка прав root
 if [ "$EUID" -ne 0 ]; then
     echo "Запустите скрипт с правами root (sudo)"
     exit 1
 fi
 
-# Проверка существования пользователя
 if ! id "$USERNAME" &>/dev/null; then
     echo "Пользователь $USERNAME не существует!"
     exit 1
 fi
 
-# Функция для проверки ошибок
+# ==================================================
+# Функции
+# ==================================================
+
 check_error() {
     if [ $? -ne 0 ]; then
         echo "Ошибка при выполнении: $1"
@@ -30,75 +34,49 @@ check_error() {
     fi
 }
 
-# Обновление системы
+# ==================================================
+# Основная установка
+# ==================================================
+
 echo "Обновление системы..."
 apt update && apt upgrade -y
 check_error "Обновление системы"
 
-# Установка базовых утилит
 echo "Установка базовых утилит..."
 apt install -y \
-    sudo \
-    curl \
-    wget \
-    git \
-    htop \
-    tree \
-    tmux \
-    mc \
-    ncdu \
-    jq \
-    ripgrep \
-    fzf \
-    dnsutils \
-    net-tools \
-    iputils-ping \
-    traceroute \
-    rsync \
-    unzip \
-    p7zip-full \
-    ca-certificates \
-    gnupg \
-    lsb-release \
-    zsh \
-    vim \
-    build-essential \
-    libssl-dev \
-    zlib1g-dev \
-    libbz2-dev \
-    libreadline-dev \
-    libsqlite3-dev \
-    libncursesw5-dev \
-    xz-utils \
-    tk-dev \
-    libxml2-dev \
-    libxmlsec1-dev \
-    libffi-dev \
-    liblzma-dev
-
+    sudo curl wget git htop tree tmux mc ncdu jq \
+    ripgrep fzf dnsutils net-tools iputils-ping \
+    traceroute rsync unzip p7zip-full ca-certificates \
+    gnupg lsb-release zsh vim build-essential \
+    libssl-dev zlib1g-dev libbz2-dev libreadline-dev \
+    libsqlite3-dev libncursesw5-dev xz-utils tk-dev \
+    libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
 check_error "Установка базовых утилит"
 
-# Добавление пользователя в sudo
+# ==================================================
+# Настройка пользователя
+# ==================================================
+
 echo "Добавление пользователя $USERNAME в sudo..."
 usermod -aG sudo "$USERNAME"
 check_error "Добавление пользователя в sudo"
 
-# Установка и настройка Zsh
+# ==================================================
+# Установка Zsh и плагинов
+# ==================================================
+
 echo "Установка и настройка Zsh..."
 apt install -y zsh
 check_error "Установка Zsh"
 
-# Установка Oh My Zsh
 echo "Установка Oh My Zsh..."
 su - "$USERNAME" -c 'sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)" "" --unattended'
 check_error "Установка Oh My Zsh"
 
-# Установка плагинов Zsh
 echo "Установка плагинов Zsh..."
 su - "$USERNAME" -c 'git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions'
 su - "$USERNAME" -c 'git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting'
 
-# Настройка Zsh для пользователя
 echo "Настройка Zsh..."
 cat > "/home/$USERNAME/.zshrc" << 'EOF'
 export ZSH="$HOME/.oh-my-zsh"
@@ -128,10 +106,12 @@ alias logs='journalctl -u'
 # Добавление путей к бинарникам
 export PATH="$HOME/.local/bin:$PATH"
 export PATH="/opt/nvim/bin:$PATH"
-
 EOF
 
+# ==================================================
 # Установка NeoVim
+# ==================================================
+
 echo "Установка NeoVim..."
 mkdir -p /opt/nvim
 cd /opt/nvim
@@ -142,66 +122,59 @@ check_error "Распаковка NeoVim"
 mv nvim-linux-x86_64 nvim
 ln -sf /opt/nvim/nvim/bin/nvim /usr/local/bin/nvim
 
-# Установка зависимостей для NeoVim
 echo "Установка зависимостей для NeoVim..."
 apt install -y python3-pip python3-venv nodejs npm
 check_error "Установка зависимостей для NeoVim"
 
-# Установка pip и neovim Python package
 apt install -y python3-pynvim
 check_error "Установка pynvim"
 
-# Настройка npm для пользователя
 su - "$USERNAME" -c "mkdir -p ~/.npm-global"
 su - "$USERNAME" -c "npm config set prefix '~/.npm-global'"
 echo 'export PATH=~/.npm-global/bin:$PATH' >> "/home/$USERNAME/.zshrc"
 
-# Установка neovim npm package
 su - "$USERNAME" -c "npm install -g neovim"
 check_error "Установка neovim npm package"
 
-# Установка конфигурации NeoVim
 echo "Установка конфигурации NeoVim..."
 su - "$USERNAME" -c "mkdir -p /home/$USERNAME/.config"
 su - "$USERNAME" -c "git clone https://github.com/nedoletoff/nvim_config.git /home/$USERNAME/.config/nvim"
 check_error "Клонирование конфигурации NeoVim"
 
-# Создание директории для swap файлов NeoVim
 su - "$USERNAME" -c "mkdir -p ~/.local/share/nvim/swap"
 
+# ==================================================
 # Установка Jenkins
-echo "Установка Jenkins..."
+# ==================================================
 
-# Добавление репозитория Jenkins
+echo "Установка Jenkins..."
 curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | tee /usr/share/keyrings/jenkins-keyring.asc > /dev/null
 echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/" | tee /etc/apt/sources.list.d/jenkins.list > /dev/null
 
-# Обновление и установка Jenkins
 apt update
 apt install -y openjdk-17-jdk
 apt install -y jenkins
 check_error "Установка Jenkins"
 
-# Запуск и включение Jenkins
 systemctl start jenkins
 systemctl enable jenkins
 check_error "Запуск Jenkins"
 
-# Настройка firewall для Jenkins (если установлен)
 if command -v ufw &> /dev/null; then
     ufw allow 8080
     ufw allow ssh
     echo "Firewall настроен для Jenkins (порт 8080)"
 fi
 
-# Получение пароля администратора Jenkins
 JENKINS_PASSWORD=$(cat /var/lib/jenkins/secrets/initialAdminPassword 2>/dev/null || echo "не удалось получить пароль")
 
-# Настройка прав доступа
+# ==================================================
+# Финальная настройка
+# ==================================================
+
 echo "Настройка прав доступа..."
 chown -R "$USERNAME:$USERNAME" "/home/$USERNAME"
 
-# Создание алиасов для Jenkins
 cat >> "/home/$USERNAME/.zshrc" << 'EOF'
 
 # Jenkins алиасы
@@ -211,15 +184,16 @@ alias jenkins-stop='systemctl stop jenkins'
 alias jenkins-restart='systemctl restart jenkins'
 alias jenkins-logs='journalctl -u jenkins -f'
 alias jenkins-port='echo "Jenkins доступен на: http://localhost:8080"'
-
 EOF
 
-# Очистка
 echo "Очистка..."
 apt autoremove -y
 apt clean
 
+# ==================================================
 # Вывод информации
+# ==================================================
+
 echo " "
 echo "=================================================="
 echo "🎉 Настройка завершена!"
