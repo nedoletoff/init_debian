@@ -138,7 +138,7 @@ check_error "Установка neovim npm package"
 
 echo "Установка конфигурации NeoVim..."
 su - "$USERNAME" -c "mkdir -p /home/$USERNAME/.config"
-su - "$USERNAME" -c "git clone https://github.com/nedoletoff/nvim_config.git /home/$USERNAME/.config/nvim"
+su - "$USERNAME" -c "git clone https://github.com/nedoletoff/nvim_config.git /home/$USERNAME/.config/"
 check_error "Клонирование конфигурации NeoVim"
 
 su - "$USERNAME" -c "mkdir -p ~/.local/share/nvim/swap"
@@ -152,7 +152,7 @@ curl -fsSL https://pkg.jenkins.io/debian-stable/jenkins.io-2023.key | tee /usr/s
 echo "deb [signed-by=/usr/share/keyrings/jenkins-keyring.asc] https://pkg.jenkins.io/debian-stable binary/" | tee /etc/apt/sources.list.d/jenkins.list > /dev/null
 
 apt update
-apt install -y openjdk-17-jdk openjdk-21-jdk
+apt install -y openjdk-17-jdk default-jdk openjdk-21-jdk
 apt install -y jenkins
 check_error "Установка Jenkins"
 
