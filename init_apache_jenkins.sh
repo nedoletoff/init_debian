@@ -77,11 +77,12 @@ echo "Установка плагинов Zsh..."
 su - "$USERNAME" -c 'git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions'
 su - "$USERNAME" -c 'git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting'
 
+
 echo "Настройка Zsh..."
 cat > "/home/$USERNAME/.zshrc" << 'EOF'
 export ZSH="$HOME/.oh-my-zsh"
-ZSH_THEME="robbyrussell"
-plugins=(git zsh-autosuggestions zsh-syntax-highlighting ssh-agent)
+ZSH_THEME="tjkirch"
+plugins=(git zsh-autosuggestions zsh-syntax-highlighting ssh-agent k9s debian kubectl lol man sudo )
 source $ZSH/oh-my-zsh.sh
 
 # Полезные алиасы

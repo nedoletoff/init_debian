@@ -85,7 +85,7 @@ echo "Настройка Zsh..."
 cat > "/home/$USERNAME/.zshrc" << 'EOF'
 export ZSH="$HOME/.oh-my-zsh"
 ZSH_THEME="tjkirch"
-plugins=(git zsh-autosuggestions zsh-syntax-highlighting ssh-agent)
+plugins=(git zsh-autosuggestions zsh-syntax-highlighting ssh-agent k9s debian kubectl lol man sudo )
 source $ZSH/oh-my-zsh.sh
 
 # Автодополнение для SSH
