@@ -254,7 +254,7 @@ su - "$USERNAME" -c 'git clone https://github.com/zsh-users/zsh-syntax-highlight
 echo "Настройка Zsh..."
 cat > "/home/$USERNAME/.zshrc" << 'EOF'
 export ZSH="$HOME/.oh-my-zsh"
-ZSH_THEME="robbyrussell"
+ZSH_THEME="tjkirch"
 plugins=(git zsh-autosuggestions zsh-syntax-highlighting ssh-agent)
 source $ZSH/oh-my-zsh.sh
 
