@@ -139,7 +139,7 @@ check_error "Установка neovim npm package"
 
 echo "Установка конфигурации NeoVim..."
 su - "$USERNAME" -c "mkdir -p /home/$USERNAME/.config"
-su - "$USERNAME" -c "git clone https://github.com/nedoletoff/nvim_config.git /home/$USERNAME/.config/"
+su - "$USERNAME" -c "git clone https://github.com/nedoletoff/nvim_config.git /home/$USERNAME/.config/nvim/"
 check_error "Клонирование конфигурации NeoVim"
 
 su - "$USERNAME" -c "mkdir -p ~/.local/share/nvim/swap"
