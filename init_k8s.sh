@@ -141,7 +141,7 @@ ln -sf /opt/nvim/nvim/bin/nvim /usr/local/bin/nvim
 
 echo "Установка конфигурации NeoVim..."
 su - "$USERNAME" -c "mkdir -p /home/$USERNAME/.config"
-su - "$USERNAME" -c "git clone https://github.com/nedoletoff/nvim_config.git ~/.config"
+su - "$USERNAME" -c "git clone https://github.com/nedoletoff/nvim_config.git ~/.config/nvim/"
 check_error "Клонирование конфигурации NeoVim"
 
 echo "Установка зависимостей для NeoVim..."
