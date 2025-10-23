@@ -50,8 +50,39 @@ apt install -y \
     gnupg lsb-release zsh vim build-essential \
     libssl-dev zlib1g-dev libbz2-dev libreadline-dev \
     libsqlite3-dev libncursesw5-dev xz-utils tk-dev \
-    libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
+    libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev \
+    fontconfig
 check_error "Установка базовых утилит"
+
+# ==================================================
+# Установка Lilex Nerd Font
+# ==================================================
+
+echo "Установка Lilex Nerd Font..."
+mkdir -p /tmp/nerd-fonts
+cd /tmp/nerd-fonts
+
+# Скачиваем Lilex Nerd Font
+wget -q "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.1.1/LilexNerdFont.zip" -O LilexNerdFont.zip
+check_error "Скачивание Lilex Nerd Font"
+
+# Создаем директории для шрифтов
+mkdir -p /usr/local/share/fonts/
+mkdir -p "/home/$USERNAME/.local/share/fonts"
+
+# Распаковываем шрифт
+unzip -q LilexNerdFont.zip -d /usr/local/share/fonts/
+unzip -q LilexNerdFont.zip -d "/home/$USERNAME/.local/share/fonts"
+
+# Обновляем кэш шрифтов
+fc-cache -f -v
+check_error "Обновление кэша шрифтов"
+
+# Чистим временные файлы
+cd /
+rm -rf /tmp/nerd-fonts
+
+echo "Lilex Nerd Font установлен"
 
 # ==================================================
 # Настройка пользователя
@@ -168,8 +199,15 @@ echo "=================================================="
 echo " "
 echo "📦 Установленные компоненты:"
 echo "   ✅ Базовые утилиты"
+echo "   ✅ Lilex Nerd Font"
 echo "   ✅ Zsh + Oh My Zsh + плагины"
 echo "   ✅ NeoVim с конфигом из репозитория"
+echo " "
+echo "🔤 Шрифт Lilex Nerd Font установлен в систему."
+echo "   Чтобы использовать его в терминале:"
+echo "   1. Откройте настройки вашего терминала"
+echo "   2. Найдите раздел со шрифтами"
+echo "   3. Выберите 'Lilex Nerd Font' или 'Lilex Nerd Font Mono'"
 echo " "
 echo "🔧 Полезные команды:"
 echo "   nvim --version              - проверить установку NeoVim"
@@ -179,6 +217,7 @@ echo "💻 Для применения изменений выполните:"
 echo "   su - $USERNAME"
 echo " "
 echo "📝 Не забудьте:"
-echo "   1. Запустить nvim и выполнить :PackerSync для установки плагинов"
-echo "   2. Перезайти в систему для применения изменений"
+echo "   1. Настроить терминал на использование Lilex Nerd Font"
+echo "   2. Запустить nvim и выполнить :PackerSync для установки плагинов"
+echo "   3. Перезайти в систему для применения изменений"
 echo " "
