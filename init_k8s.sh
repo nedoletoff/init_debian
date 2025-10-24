@@ -54,7 +54,7 @@ apt install -y \
     xz-utils tk-dev libxml2-dev libxmlsec1-dev \
     libffi-dev liblzma-dev sysstat iotop cifs-utils \
     vim expect containerd docker.io ipvsadm nfs-common \
-    software-properties-common
+    software-properties-common xclip
 check_error "Установка базовых утилит"
 
 # ==================================================
@@ -159,6 +159,116 @@ su - "$USERNAME" -c "npm install -g neovim"
 check_error "Установка neovim npm package"
 
 # ==================================================
+# Настройка Midnight Commander
+# ==================================================
+
+echo "Настройка Midnight Commander..."
+su - "$USERNAME" -c "mkdir -p ~/.config/mc"
+cat > "/home/$USERNAME/.config/mc/ini" << 'EOF'
+[Midnight-Commander]
+confirm_exit=1
+use_internal_edit=0
+editor_edit_confirm_save=1
+
+[Layout]
+message_visible=0
+command_prompt=1
+keybar_visible=1
+horizontal_split=0
+
+[Panels]
+auto_save_setup_panels=1
+EOF
+
+chown -R "$USERNAME:$USERNAME" "/home/$USERNAME/.config/mc"
+
+# ==================================================
+# Настройка Tmux
+# ==================================================
+
+echo "Настройка Tmux..."
+cat > "/home/$USERNAME/.tmux.conf" << 'EOF'
+# ===== БАЗОВЫЕ НАСТРОЙКИ =====
+# Установка префикса на Ctrl+a (вместо стандартного Ctrl+b)
+set -g prefix C-a
+unbind C-b
+bind C-a send-prefix
+
+# Нумерация окон с 1 вместо 0
+set -g base-index 1
+set -g pane-base-index 1
+
+# Время отображения сообщений (мс)
+set -g display-time 4000
+
+# ===== МЫШЬ =====
+# Включение поддержки мыши (включая прокрутку и выделение)
+set -g mouse on
+
+# Прокрутка мышью в режиме копирования
+bind -T copy-mode-vi WheelUpPane send -N1 -X scroll-up
+bind -T copy-mode-vi WheelDownPane send -N1 -X scroll-down
+
+# ===== КОПИРОВАНИЕ И ВСТАВКА =====
+# Использование системного буфера обмена
+set -g set-clipboard on
+
+# Копирование в буфер обмена Linux (xclip должен быть установлен)
+bind -T copy-mode-vi Enter send-keys -X copy-pipe-and-cancel "xclip -i -f -selection primary | xclip -i -selection clipboard"
+
+# Включение режима vi для копирования
+set-window-option -g mode-keys vi
+
+# Копирование с помощью мыши (выделил - скопировал в буфер)
+bind -T root DoubleClick1Pane select-pane -t= \; copy-mode -M \; send-keys -X select-word \; run-shell "sleep 0.1" \; send-keys -X copy-pipe-and-cancel "xclip -i -f -selection primary | xclip -i -selection clipboard"
+
+# ===== ВНЕШНИЙ ВИД =====
+# Цветовая схема (256 цветов)
+set -g default-terminal "screen-256color"
+set -ga terminal-overrides ",xterm-256color:Tc"
+
+# Статус бар
+set -g status on
+set -g status-interval 1
+set -g status-justify left
+set -g status-bg black
+set -g status-fg white
+set -g status-left-length 20
+set -g status-left "#[fg=green]#S #[fg=white]» "
+set -g status-right "#[fg=white]%H:%M:%S #[fg=yellow]%d.%m.%Y"
+
+# Цвет активной панели
+set -g pane-border-style fg=colour8
+set -g pane-active-border-style fg=green
+
+# ===== УДОБНЫЕ СОЧЕТАНИЯ =====
+# Перезагрузка конфигурации
+bind r source-file ~/.tmux.conf \; display "Config reloaded!"
+
+# Разделение панелей (более интуитивные сочетания)
+bind | split-window -h
+bind - split-window -v
+
+# Переключение панелей с помощью Alt+стрелок (удобно в SSH)
+bind -n M-Left select-pane -L
+bind -n M-Right select-pane -R
+bind -n M-Up select-pane -U
+bind -n M-Down select-pane -D
+
+# Изменение размера панелей с помощью Ctrl+стрелок
+bind -n C-Left resize-pane -L 5
+bind -n C-Right resize-pane -R 5
+bind -n C-Up resize-pane -U 5
+bind -n C-Down resize-pane -D 5
+
+# Быстрое переключение между окнами
+bind -n C-PageUp previous-window
+bind -n C-PageDown next-window
+EOF
+
+chown "$USERNAME:$USERNAME" "/home/$USERNAME/.tmux.conf"
+
+# ==================================================
 # Установка Docker
 # ==================================================
 
@@ -229,6 +339,14 @@ echo "   ✅ NeoVim с конфигом из репозитория"
 echo "   ✅ Docker и Docker Compose"
 echo "   ✅ Kubernetes (kubelet, kubeadm, kubectl)"
 echo "   ✅ Helm"
+echo "🔧 Дополнительные настройки:"
+echo "   ✅ Midnight Commander с конфигурацией"
+echo "   ✅ Tmux с улучшенной конфигурацией"
+echo " "
+echo "💡 Новые возможности:"
+echo "   mc                         - запуск midnight commander"
+echo "   tmux                       - запуск tmux с улучшенной конфигурацией"
+echo "   Ctrl+a затем ?             - просмотр сочетаний клавиш tmux"
 echo " "
 echo "🔧 Полезные команды:"
 echo "   nvim --version              - проверить установку NeoVim"
