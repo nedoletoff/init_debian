@@ -1,12 +1,9 @@
-# Init Debian Scripts - Flash Forward**
+# Init Debian Scripts - Flash Forward
 
 ## Версия на русском:
 
-
 ### 🚀 О проекте
 Набор автоматизированных bash-скриптов для быстрой настройки Debian-серверов под различные задачи. Версия 2.0 приносит значительные улучшения в работе с терминалом благодаря комплексной настройке Midnight Commander и Tmux.
-
-### 📦 Что нового в v2.0
 
 #### 🛠 Универсальные улучшения для всех скриптов:
 - **Расширенная настройка Midnight Commander** - готовый к использованию файловый менеджер с оптимизированным интерфейсом
@@ -16,7 +13,7 @@
 
 #### 🎯 Особенности Tmux:
 - **Префикс Ctrl+a** вместо неудобного Ctrl+b
-- **Визуальные улучшения** - статус-бар с информацией о времени и сессиях
+- **Визуальные улучшения** - статус-бар с информацией о времени и сессиями
 - **Интуитивные сочетания клавиш**:
   - `Alt+стрелки` - переключение между панелями
   - `Ctrl+стрелки` - изменение размеров панелей
@@ -53,7 +50,19 @@
 - UFW firewall
 - Все улучшения терминала из v2.0
 
-#### 4. init_k8s.sh - Контейнеризация и оркестрация
+#### 4. init_nginx_phpadmin.sh - Современный веб-сервер с панелью управления
+**Для кого:** Веб-разработчики, системные администраторы, любители современных стеков
+**Устанавливает:**
+- **Nginx** с поддержкой HTTP/2 и SSL
+- **PHP-FPM** с полным набором расширений
+- **MariaDB/MySQL** сервер с безопасной настройкой
+- **phpMyAdmin 5.2.3** - последняя версия панели управления БД
+- Postfix для email-уведомлений
+- UFW firewall с настройками для веб-сервера
+- Автоматические бэкапы баз данных и конфигов
+- Все улучшения терминала из v2.0
+
+#### 5. init_k8s.sh - Контейнеризация и оркестрация
 **Для кого:** DevOps, SRE, инженеры облачных платформ
 **Устанавливает:**
 - Docker + Docker Compose
@@ -75,8 +84,6 @@
 
 ### 🚀 About the Project
 A collection of automated bash scripts for rapid Debian server configuration for various tasks. Version 2.0 brings significant terminal workflow improvements through comprehensive Midnight Commander and Tmux configuration.
-
-### 📦 What's New in v2.0
 
 #### 🛠 Universal Enhancements for All Scripts:
 - **Extended Midnight Commander Setup** - file manager ready to use with optimized interface
@@ -123,7 +130,19 @@ A collection of automated bash scripts for rapid Debian server configuration for
 - UFW firewall
 - All terminal enhancements from v2.0
 
-#### 4. init_k8s.sh - Containerization & Orchestration
+#### 4. init_nginx_phpadmin.sh - Modern Web Server with Admin Panel
+**For:** Web developers, system administrators, modern stack enthusiasts
+**Installs:**
+- **Nginx** with HTTP/2 and SSL support
+- **PHP-FPM** with complete set of extensions
+- **MariaDB/MySQL** server with secure configuration
+- **phpMyAdmin 5.2.3** - latest database management panel
+- Postfix for email notifications
+- UFW firewall with web server rules
+- Automatic backups for databases and configs
+- All terminal enhancements from v2.0
+
+#### 5. init_k8s.sh - Containerization & Orchestration
 **For:** DevOps, SRE, cloud platform engineers
 **Installs:**
 - Docker + Docker Compose
@@ -139,4 +158,12 @@ A collection of automated bash scripts for rapid Debian server configuration for
 - **Optimized Workflow** - ready-to-use tools for productive work
 - **Documentation** - clear aliases and key combinations
 
-**Perfect for:** Development servers, production environments, learning platforms, and anyone who values efficient terminal workflow!ipts now provide consistent terminal environment setup with improved user experience!m/)
+---
+
+## 📞 Поддержка / Support
+
+Если у вас есть вопросы или предложения по улучшению скриптов, создавайте issue в репозитории проекта.
+
+If you have questions or suggestions for improving the scripts, please create an issue in the project repository.
+
+**Happy automating! 🚀**
