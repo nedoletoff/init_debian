@@ -48,7 +48,7 @@
 - Postfix для email-рассылок
 - Автоматические бэкапы
 - UFW firewall
-- Все улучшения терминала из v2.0
+
 
 #### 4. init_nginx_phpadmin.sh - Современный веб-сервер с панелью управления
 **Для кого:** Веб-разработчики, системные администраторы, любители современных стеков
@@ -60,7 +60,7 @@
 - Postfix для email-уведомлений
 - UFW firewall с настройками для веб-сервера
 - Автоматические бэкапы баз данных и конфигов
-- Все улучшения терминала из v2.0
+
 
 #### 5. init_k8s.sh - Контейнеризация и оркестрация
 **Для кого:** DevOps, SRE, инженеры облачных платформ
@@ -70,7 +70,7 @@
 - Helm для управления пакетами
 - Go и asdf version manager
 - Полный набор инструментов для разработки
-- Все терминальные улучшения v2.0
+
 
 ### 💡 Почему это удобно
 - **Единообразие** - одинаковое окружение на всех серверах
@@ -128,7 +128,7 @@ A collection of automated bash scripts for rapid Debian server configuration for
 - Postfix for email
 - Automatic backups
 - UFW firewall
-- All terminal enhancements from v2.0
+
 
 #### 4. init_nginx_phpadmin.sh - Modern Web Server with Admin Panel
 **For:** Web developers, system administrators, modern stack enthusiasts
@@ -140,7 +140,7 @@ A collection of automated bash scripts for rapid Debian server configuration for
 - Postfix for email notifications
 - UFW firewall with web server rules
 - Automatic backups for databases and configs
-- All terminal enhancements from v2.0
+
 
 #### 5. init_k8s.sh - Containerization & Orchestration
 **For:** DevOps, SRE, cloud platform engineers
@@ -150,7 +150,7 @@ A collection of automated bash scripts for rapid Debian server configuration for
 - Helm for package management
 - Go and asdf version manager
 - Complete development toolset
-- All terminal improvements from v2.0
+
 
 ### 💡 Why It's Convenient
 - **Consistency** - identical environment across all servers
