@@ -54,7 +54,7 @@ apt install -y \
     libbz2-dev libreadline-dev libsqlite3-dev \
     libncursesw5-dev xz-utils tk-dev libxml2-dev \
     libxmlsec1-dev libffi-dev liblzma-dev sysstat \
-    iotop cifs-utils vim expect xclip
+    iotop cifs-utils vim expect xclip software-properties-common
 check_error "Установка базовых утилит"
 
 echo "Обновление репозиториев перед установкой Apache..."
@@ -64,7 +64,7 @@ check_error "Обновление репозиториев"
 echo "Установка Apache и сопутствующих пакетов..."
 apt install -y \
     apache2 apache2-utils apache2-doc \
-    libapache2-mod-ssl libapache2-mod-security2 \
+    libapache2-mod-security2 \
     openssl certbot python3-certbot-apache \
     php php-cli php-fpm php-curl php-gd \
     php-mysql php-mbstring php-xml php-zip \
