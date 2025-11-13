@@ -57,6 +57,10 @@ apt install -y \
     iotop cifs-utils vim expect xclip
 check_error "Установка базовых утилит"
 
+echo "Обновление репозиториев перед установкой Apache..."
+apt update
+check_error "Обновление репозиториев"
+
 echo "Установка Apache и сопутствующих пакетов..."
 apt install -y \
     apache2 apache2-utils apache2-doc \
