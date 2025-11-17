@@ -53,6 +53,34 @@ check_nginx_config() {
 }
 
 # ==================================================
+# Предварительная настройка пакетов через debconf
+# ==================================================
+
+echo "Предварительная настройка пакетов через debconf..."
+
+# Настройка Postfix для автоматической установки
+echo "postfix postfix/mailname string $DOMAIN" | debconf-set-selections
+echo "postfix postfix/main_mailer_type string 'Internet Site'" | debconf-set-selections
+echo "postfix postfix/destinations string localhost.localdomain, localhost, $DOMAIN" | debconf-set-selections
+
+# Настройка других пакетов для неинтерактивной установки
+export DEBIAN_FRONTEND=noninteractive
+
+echo "postfix postfix/root_address string" | debconf-set-selections
+echo "postfix postfix/rfc1035_violation boolean false" | debconf-set-selections
+echo "postfix postfix/mynetworks string 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128" | debconf-set-selections
+echo "postfix postfix/mailbox_limit string 0" | debconf-set-selections
+echo "postfix postfix/recipient_delim string +" | debconf-set-selections
+echo "postfix postfix/protocols select all" | debconf-set-selections
+echo "postfix postfix/relayhost string" | debconf-set-selections
+
+# Настройка для phpmyadmin (если будет устанавливаться из репозитория)
+echo "phpmyadmin phpmyadmin/reconfigure-webserver multiselect none" | debconf-set-selections
+echo "phpmyadmin phpmyadmin/dbconfig-install boolean false" | debconf-set-selections
+
+echo "✅ Предварительная настройка пакетов завершена"
+
+# ==================================================
 # Основная установка
 # ==================================================
 
@@ -87,6 +115,53 @@ apt install -y \
     php-xmlrpc mariadb-server mariadb-client \
     postfix mailutils
 check_error "Установка Nginx и сопутствующих пакетов"
+
+# ==================================================
+# Дополнительная настройка Postfix
+# ==================================================
+
+echo "Дополнительная настройка Postfix..."
+
+# Настройка основных параметров Postfix
+postconf -e "myhostname = $DOMAIN"
+postconf -e "mydomain = $DOMAIN"
+postconf -e "myorigin = \$mydomain"
+postconf -e "mydestination = \$myhostname, localhost.\$mydomain, localhost, \$mydomain"
+postconf -e "mynetworks = 127.0.0.0/8 [::ffff:127.0.0.0]/104 [::1]/128"
+postconf -e "inet_interfaces = loopback-only"
+postconf -e "home_mailbox = Maildir/"
+
+# Настройка для локальной доставки
+postconf -e "virtual_alias_maps = hash:/etc/postfix/virtual"
+postconf -e "alias_maps = hash:/etc/aliases"
+
+# Создание файла виртуальных алиасов
+cat > /etc/postfix/virtual << EOF
+# Virtual aliases for $DOMAIN
+postmaster@$DOMAIN    root
+abuse@$DOMAIN         root
+webmaster@$DOMAIN     $USERNAME
+admin@$DOMAIN         $USERNAME
+@$DOMAIN              $USERNAME
+EOF
+
+# Компиляция виртуальных алиасов
+postmap /etc/postfix/virtual
+
+# Обновление алиасов
+cat >> /etc/aliases << EOF
+# System aliases
+root:   $USERNAME
+$USERNAME:    $USERNAME
+EOF
+
+newaliases
+
+echo "Перезагрузка Postfix..."
+systemctl restart postfix
+systemctl enable postfix
+
+echo "✅ Postfix настроен для домена: $DOMAIN"
 
 # ==================================================
 # Определение версии PHP
@@ -511,6 +586,9 @@ echo "Настройка MariaDB..."
 
 MYSQL_ROOT_PASS="RootPassword123!"
 
+# Запускаем MariaDB если еще не запущен
+systemctl start mariadb
+
 # Безопасная настройка MySQL
 mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '$MYSQL_ROOT_PASS';"
 
@@ -519,6 +597,7 @@ DB_NAME="${DOMAIN//./_}_db"
 DB_USER="${DOMAIN//./_}_user"
 DB_PASS="SitePassword123!"
 
+# Используем пароль для всех последующих команд
 mysql -u root -p$MYSQL_ROOT_PASS -e "DELETE FROM mysql.user WHERE User='';"
 mysql -u root -p$MYSQL_ROOT_PASS -e "DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');"
 mysql -u root -p$MYSQL_ROOT_PASS -e "DROP DATABASE IF EXISTS test;"
@@ -528,7 +607,7 @@ mysql -u root -p$MYSQL_ROOT_PASS -e "FLUSH PRIVILEGES;"
 mysql -u root -p$MYSQL_ROOT_PASS -e "CREATE DATABASE IF NOT EXISTS $DB_NAME;"
 mysql -u root -p$MYSQL_ROOT_PASS -e "CREATE USER IF NOT EXISTS '$DB_USER'@'localhost' IDENTIFIED BY '$DB_PASS';"
 mysql -u root -p$MYSQL_ROOT_PASS -e "GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'localhost';"
-mysql -u root -p$MYSQL_ROOT_PASS -e "FLUSH PRIVILEGES;
+mysql -u root -p$MYSQL_ROOT_PASS -e "FLUSH PRIVILEGES;"
 
 # Создание пользователя для phpMyAdmin
 mysql -u root -p$MYSQL_ROOT_PASS -e "CREATE USER IF NOT EXISTS 'pma_user'@'localhost' IDENTIFIED BY 'PmaPassword123!';"
@@ -564,10 +643,10 @@ su - "$USERNAME" -c 'git clone https://github.com/zsh-users/zsh-syntax-highlight
 
 echo "Настройка Zsh..."
 cat > "/home/$USERNAME/.zshrc" << EOF
-export ZSH="\$HOME/.oh-my-zsh"
+export ZSH="\\\$HOME/.oh-my-zsh"
 ZSH_THEME="tjkirch"
 plugins=(git zsh-autosuggestions zsh-syntax-highlighting ssh-agent k9s debian kubectl lol man sudo )
-source \$ZSH/oh-my-zsh.sh
+source \\\$ZSH/oh-my-zsh.sh
 
 # Nginx aliases
 alias nginx-start='sudo systemctl start nginx'
@@ -593,13 +672,21 @@ alias php-restart='sudo systemctl restart php$PHP_VERSION-fpm'
 alias pma-logs='sudo tail -f /var/log/php/*.log'
 alias pma-dir='echo "phpMyAdmin расположен в /usr/share/phpmyadmin"'
 
+# Postfix aliases
+alias postfix-start='sudo systemctl start postfix'
+alias postfix-stop='sudo systemctl stop postfix'
+alias postfix-restart='sudo systemctl restart postfix'
+alias postfix-status='sudo systemctl status postfix'
+alias postfix-logs='sudo tail -f /var/log/mail.log'
+alias postfix-test='sudo postfix check'
+
 # Website management
 alias www-logs='cd /var/www'
 alias www-edit='sudo vim /etc/nginx/sites-available/'
 
 # Добавление путей к бинарникам
-export PATH="\$HOME/.local/bin:\$PATH"
-export PATH="/opt/nvim/bin:\$PATH"
+export PATH="\\\$HOME/.local/bin:\\\$PATH"
+export PATH="/opt/nvim/bin:\\\$PATH"
 EOF
 
 chown "$USERNAME:$USERNAME" "/home/$USERNAME/.zshrc"
@@ -775,6 +862,7 @@ cat > /var/www/$DOMAIN/public_html/index.html << EOF
             <p><strong>Директория сайта:</strong> /var/www/$DOMAIN/public_html</p>
             <p><strong>Веб-сервер:</strong> Nginx с PHP-FPM</p>
             <p><strong>База данных:</strong> MariaDB/MySQL</p>
+            <p><strong>Почтовый сервер:</strong> Postfix (настроен для $DOMAIN)</p>
             <p><strong>Владелец:</strong> $USERNAME</p>
             <p><strong>Время настройки:</strong> $(date)</p>
         </div>
@@ -791,6 +879,8 @@ cat > /var/www/$DOMAIN/public_html/index.html << EOF
             <li><code>nginx-logs</code> - просмотр логов Nginx</li>
             <li><code>mysql-restart</code> - перезапуск MySQL</li>
             <li><code>php-restart</code> - перезапуск PHP-FPM</li>
+            <li><code>postfix-restart</code> - перезапуск Postfix</li>
+            <li><code>postfix-logs</code> - просмотр почтовых логов</li>
             <li><code>pma-logs</code> - просмотр логов phpMyAdmin</li>
         </ul>
 
@@ -799,6 +889,7 @@ cat > /var/www/$DOMAIN/public_html/index.html << EOF
             <p>• Настройте безопасные пароли для пользователей MySQL</p>
             <p>• Получите SSL сертификаты: <code>certbot --nginx -d $DOMAIN</code></p>
             <p>• Ограничьте доступ к phpMyAdmin по IP при необходимости</p>
+            <p>• Postfix настроен для локальной доставки почты</p>
         </div>
 
         <h3>📁 Структура проекта:</h3>
@@ -848,9 +939,11 @@ echo "Перезагрузка служб..."
 systemctl restart nginx
 systemctl restart mariadb
 systemctl restart php$PHP_VERSION-fpm
+systemctl restart postfix
 systemctl enable nginx
 systemctl enable mariadb
 systemctl enable php$PHP_VERSION-fpm
+systemctl enable postfix
 check_error "Перезагрузка служб"
 
 echo "Настройка автоматических бэкапов..."
@@ -891,7 +984,7 @@ apt clean
 
 echo " "
 echo "=================================================="
-echo "🎉 Настройка Nginx сервера завершена!"
+echo "🎉 Настройка сервера завершена!"
 echo "=================================================="
 echo " "
 echo "📊 Информация о настройке:"
@@ -902,12 +995,15 @@ echo "   База данных: ${DOMAIN//./_}_db"
 echo "   Пользователь БД: ${DOMAIN//./_}_user"
 echo "   Версия PHP: $PHP_VERSION"
 echo "   phpMyAdmin: http://$DOMAIN/phpmyadmin (версия 5.2.3)"
+echo "   Postfix: настроен для домена $DOMAIN"
 echo " "
 echo "🔧 Полезные команды:"
 echo "   systemctl status nginx     - статус Nginx"
 echo "   systemctl status mariadb   - статус MySQL"
 echo "   systemctl status php$PHP_VERSION-fpm - статус PHP-FPM"
+echo "   systemctl status postfix   - статус Postfix"
 echo "   nginx-logs                 - логи Nginx (alias)"
+echo "   postfix-logs               - логи почты (alias)"
 echo "   mysql -u root -p           - подключение к MySQL"
 echo "   pma-logs                   - логи phpMyAdmin (alias)"
 echo " "
@@ -916,18 +1012,24 @@ echo "   Root пользователь: root / $MYSQL_ROOT_PASS"
 echo "   Пользователь БД: ${DOMAIN//./_}_user / SitePassword123!"
 echo "   phpMyAdmin пользователь: pma_user / PmaPassword123!"
 echo " "
+echo "📧 Настройка Postfix:"
+echo "   Домен почты: $DOMAIN"
+echo "   Локальные пользователи: $USERNAME, root"
+echo "   Проверка почты: tail -f /var/log/mail.log"
+echo " "
 echo "⚠️  Важные замечания:"
 echo "   1. Смените пароли MySQL на более безопасные!"
 echo "   2. Настройте SSL сертификаты: certbot --nginx -d $DOMAIN"
 echo "   3. Убедитесь что firewall настроен правильно: ufw status"
 echo "   4. Проверьте доступность сайта: curl http://localhost"
 echo "   5. Для безопасности ограничьте доступ к phpMyAdmin при необходимости"
-echo "   6. Версия phpmyadmin 5.3.2 проверьте ее актуальность на момент установки"
+echo "   6. Postfix настроен для локальной доставки почты"
 echo " "
 echo "🔧 Дополнительные настройки:"
 echo "   ✅ Midnight Commander с конфигурацией"
 echo "   ✅ Tmux с улучшенной конфигурацией"
 echo "   ✅ phpMyAdmin 5.2.3 с базовой конфигурацией"
+echo "   ✅ Postfix с автоматической настройкой домена"
 echo "   ✅ Автоматические бэкапы настроены"
 echo " "
 echo "💡 Новые возможности:"
@@ -935,9 +1037,11 @@ echo "   mc                         - запуск midnight commander"
 echo "   tmux                       - запуск tmux с улучшенной конфигурацией"
 echo "   Ctrl+a затем ?             - просмотр сочетаний клавиш tmux"
 echo "   nginx-test                 - проверка конфигурации Nginx"
+echo "   postfix-test               - проверка конфигурации Postfix"
 echo " "
 echo "📚 Документация:"
 echo "   phpMyAdmin 5.2.3: https://www.phpmyadmin.net/docs/"
 echo "   Nginx: https://nginx.org/en/docs/"
 echo "   MySQL: https://dev.mysql.com/doc/"
+echo "   Postfix: http://www.postfix.org/documentation.html"
 echo "=================================================="
