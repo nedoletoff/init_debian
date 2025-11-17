@@ -508,28 +508,32 @@ fi
 # ==================================================
 
 echo "Настройка MariaDB..."
+
+MYSQL_ROOT_PASS="RootPassword123!"
+
 # Безопасная настройка MySQL
-mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY 'RootPassword123!';"
-mysql -e "DELETE FROM mysql.user WHERE User='';"
-mysql -e "DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');"
-mysql -e "DROP DATABASE IF EXISTS test;"
-mysql -e "DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';"
-mysql -e "FLUSH PRIVILEGES;"
+mysql -e "ALTER USER 'root'@'localhost' IDENTIFIED BY '$MYSQL_ROOT_PASS';"
 
 echo "Создание базы данных и пользователя для сайта..."
 DB_NAME="${DOMAIN//./_}_db"
 DB_USER="${DOMAIN//./_}_user"
 DB_PASS="SitePassword123!"
 
-mysql -e "CREATE DATABASE IF NOT EXISTS $DB_NAME;"
-mysql -e "CREATE USER IF NOT EXISTS '$DB_USER'@'localhost' IDENTIFIED BY '$DB_PASS';"
-mysql -e "GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'localhost';"
-mysql -e "FLUSH PRIVILEGES;"
+mysql -u root -p$MYSQL_ROOT_PASS -e "DELETE FROM mysql.user WHERE User='';"
+mysql -u root -p$MYSQL_ROOT_PASS -e "DELETE FROM mysql.user WHERE User='root' AND Host NOT IN ('localhost', '127.0.0.1', '::1');"
+mysql -u root -p$MYSQL_ROOT_PASS -e "DROP DATABASE IF EXISTS test;"
+mysql -u root -p$MYSQL_ROOT_PASS -e "DELETE FROM mysql.db WHERE Db='test' OR Db='test\\_%';"
+mysql -u root -p$MYSQL_ROOT_PASS -e "FLUSH PRIVILEGES;"
+
+mysql -u root -p$MYSQL_ROOT_PASS -e "CREATE DATABASE IF NOT EXISTS $DB_NAME;"
+mysql -u root -p$MYSQL_ROOT_PASS -e "CREATE USER IF NOT EXISTS '$DB_USER'@'localhost' IDENTIFIED BY '$DB_PASS';"
+mysql -u root -p$MYSQL_ROOT_PASS -e "GRANT ALL PRIVILEGES ON $DB_NAME.* TO '$DB_USER'@'localhost';"
+mysql -u root -p$MYSQL_ROOT_PASS -e "FLUSH PRIVILEGES;
 
 # Создание пользователя для phpMyAdmin
-mysql -e "CREATE USER IF NOT EXISTS 'pma_user'@'localhost' IDENTIFIED BY 'PmaPassword123!';"
-mysql -e "GRANT ALL PRIVILEGES ON *.* TO 'pma_user'@'localhost';"
-mysql -e "FLUSH PRIVILEGES;"
+mysql -u root -p$MYSQL_ROOT_PASS -e "CREATE USER IF NOT EXISTS 'pma_user'@'localhost' IDENTIFIED BY 'PmaPassword123!';"
+mysql -u root -p$MYSQL_ROOT_PASS -e "GRANT ALL PRIVILEGES ON *.* TO 'pma_user'@'localhost';"
+mysql -u root -p$MYSQL_ROOT_PASS -e "FLUSH PRIVILEGES;"
 
 # ==================================================
 # Настройка firewall
@@ -856,7 +860,7 @@ BACKUP_DIR="/var/www/$DOMAIN/backups"
 DATE=\$(date +%Y%m%d_%H%M%S)
 
 # Создание бэкапа базы данных
-mysqldump -u root -pRootPassword123! ${DOMAIN//./_}_db > \$BACKUP_DIR/db_backup_\$DATE.sql 2>/dev/null
+mysqldump -u root -p$MYSQL_ROOT_PASS ${DOMAIN//./_}_db > \$BACKUP_DIR/db_backup_\$DATE.sql 2>/dev/null
 
 # Создание бэкапа файлов сайта
 tar -czf \$BACKUP_DIR/files_backup_\$DATE.tar.gz -C /var/www/$DOMAIN public_html
@@ -908,7 +912,7 @@ echo "   mysql -u root -p           - подключение к MySQL"
 echo "   pma-logs                   - логи phpMyAdmin (alias)"
 echo " "
 echo "🔐 Учетные данные MySQL:"
-echo "   Root пользователь: root / RootPassword123!"
+echo "   Root пользователь: root / $MYSQL_ROOT_PASS"
 echo "   Пользователь БД: ${DOMAIN//./_}_user / SitePassword123!"
 echo "   phpMyAdmin пользователь: pma_user / PmaPassword123!"
 echo " "
