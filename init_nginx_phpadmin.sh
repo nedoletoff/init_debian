@@ -642,11 +642,16 @@ su - "$USERNAME" -c 'git clone https://github.com/zsh-users/zsh-autosuggestions 
 su - "$USERNAME" -c 'git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting'
 
 echo "Настройка Zsh..."
-cat > "/home/$USERNAME/.zshrc" << EOF
-export ZSH="\\\$HOME/.oh-my-zsh"
+cat > "/home/$USERNAME/.zshrc" << 'EOF'
+export ZSH="$HOME/.oh-my-zsh"
 ZSH_THEME="tjkirch"
 plugins=(git zsh-autosuggestions zsh-syntax-highlighting ssh-agent k9s debian kubectl lol man sudo )
-source \\\$ZSH/oh-my-zsh.sh
+source $ZSH/oh-my-zsh.sh
+
+# Автодополнение для SSH
+zstyle -s ':completion:*:hosts' hosts _ssh_config
+[[ -r ~/.ssh/config ]] && _ssh_config+=($(cat ~/.ssh/config | sed -n 's/Host[=\t ]//p'))
+zstyle ':completion:*:hosts' hosts $_ssh_config
 
 # Nginx aliases
 alias nginx-start='sudo systemctl start nginx'
@@ -684,9 +689,9 @@ alias postfix-test='sudo postfix check'
 alias www-logs='cd /var/www'
 alias www-edit='sudo vim /etc/nginx/sites-available/'
 
-# Добавление путей к бинарникам
-export PATH="\$HOME/.local/bin:\$PATH"
-export PATH="/opt/nvim/bin:\$PATH"
+
+export PATH="$HOME/.local/bin:$PATH"
+export PATH="/opt/nvim/bin:$PATH"
 EOF
 
 chown "$USERNAME:$USERNAME" "/home/$USERNAME/.zshrc"
