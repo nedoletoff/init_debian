@@ -315,7 +315,6 @@ rm -f /etc/nginx/conf.d/security.conf
 
 cat > /etc/nginx/conf.d/security.conf << 'EOF'
 # Базовые настройки безопасности
-server_tokens off;
 
 # Ограничение размеров запросов
 client_max_body_size 10M;
