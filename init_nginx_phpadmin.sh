@@ -685,8 +685,8 @@ alias www-logs='cd /var/www'
 alias www-edit='sudo vim /etc/nginx/sites-available/'
 
 # Добавление путей к бинарникам
-export PATH="\\\$HOME/.local/bin:\\\$PATH"
-export PATH="/opt/nvim/bin:\\\$PATH"
+export PATH="\$HOME/.local/bin:\$PATH"
+export PATH="/opt/nvim/bin:\$PATH"
 EOF
 
 chown "$USERNAME:$USERNAME" "/home/$USERNAME/.zshrc"
