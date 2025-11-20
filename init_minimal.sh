@@ -107,7 +107,7 @@ check_error "Установка Oh My Zsh"
 echo "Установка плагинов Zsh..."
 su - "$USERNAME" -c 'git clone https://github.com/zsh-users/zsh-autosuggestions ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-autosuggestions'
 su - "$USERNAME" -c 'git clone https://github.com/zsh-users/zsh-syntax-highlighting.git ${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-syntax-highlighting'
-su - "$USERNAME" -c 'git clone https://github.com/p1r473/zsh-color-logging.git $ZSH_CUSTOM/plugins/zsh-color-logging'
+su - "$USERNAME" -c 'git clone https://github.com/p1r473/zsh-color-logging.git${ZSH_CUSTOM:-~/.oh-my-zsh/custom}/plugins/zsh-color-logging'
 
 echo "Настройка Zsh..."
 cat > "/home/$USERNAME/.zshrc" << 'EOF'
