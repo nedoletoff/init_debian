@@ -63,8 +63,10 @@ mkdir -p /tmp/nerd-fonts
 cd /tmp/nerd-fonts
 
 # Скачиваем Lilex Nerd Font
-wget -q "https://github.com/ryanoasis/nerd-fonts/releases/download/v3.1.1/LilexNerdFont.zip" -O LilexNerdFont.zip
+LATEST_URL=$(curl -s https://api.github.com/repos/ryanoasis/nerd-fonts/releases/latest | grep browser_download_url | grep 'Lilex.zip' | cut -d '"' -f 4)
+wget -q "$LATEST_URL" -O LilexNerdFont.zip
 check_error "Скачивание Lilex Nerd Font"
+
 
 # Создаем директории для шрифтов
 mkdir -p /usr/local/share/fonts/
